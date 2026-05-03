@@ -1,16 +1,15 @@
 package id.rockierocker.runpodworker.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
+import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.annotation.JsonNaming;
+import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
-@JsonNaming(tools.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy.class)
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @Data
-public class UpscalerResponseDto extends JobWebhookResponseDto {
+public class UpscalerResponseDto extends JobWebhookRequestDto {
     private String format;
     private List<Integer> originalSize;
     private String outputFormat;
@@ -23,5 +22,5 @@ public class UpscalerResponseDto extends JobWebhookResponseDto {
     private String inputStorageMode;
     private String outputStorageMode;
     private String outputVolume;
-    private LocalDateTime webhookTriggeredAt;
+    private OffsetDateTime webhookTriggeredAt;
 }

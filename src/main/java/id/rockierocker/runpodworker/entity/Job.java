@@ -1,13 +1,12 @@
 package id.rockierocker.runpodworker.entity;
 
-import id.rockierocker.runpodworker.dto.JobRequest;
-import id.rockierocker.runpodworker.dto.JobResponse;
-import id.rockierocker.runpodworker.dto.JobWebhookResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
+
+import java.util.Map;
 
 @Entity
 @Table(name = "job")
@@ -40,15 +39,15 @@ public class Job extends BaseEntity{
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "job_request", columnDefinition = "jsonb")
-    private JobRequest<?> jobRequest;
+    private Map<String, Object> jobRequest;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "job_response", columnDefinition = "jsonb")
-    private JobResponse<?> jobResponse;
+    private Map<String, Object> jobResponse;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "job_webhook_response", columnDefinition = "jsonb")
-    private JobWebhookResponseDto jobWebhookResponse;
+    private Map<String, Object> jobWebhookResponse;
 
     @Column(name = "execution_time")
     private Float executionTime;

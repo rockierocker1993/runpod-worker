@@ -1,7 +1,7 @@
 package id.rockierocker.runpodworker.consumer;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.dto.ConsumerRequest;
 import id.rockierocker.runpodworker.dto.UpscalerRequestDto;
 import id.rockierocker.runpodworker.service.UpscalerJobService;

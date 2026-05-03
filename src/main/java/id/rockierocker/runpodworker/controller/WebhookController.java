@@ -1,6 +1,5 @@
 package id.rockierocker.runpodworker.controller;
 
-import id.rockierocker.runpodworker.dto.JobResponse;
 import id.rockierocker.runpodworker.dto.UpscalerResponseDto;
 import id.rockierocker.runpodworker.service.UpscalerJobService;
 import lombok.RequiredArgsConstructor;

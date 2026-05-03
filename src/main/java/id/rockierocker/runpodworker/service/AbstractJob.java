@@ -1,5 +1,6 @@
 package id.rockierocker.runpodworker.service;
 
+import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.component.HttpRequest;
 import id.rockierocker.runpodworker.component.RedisPublisherService;
 import id.rockierocker.runpodworker.dto.*;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ abstract class AbstractJob <T> {
     protected final HttpRequest httpRequest;
     protected final JobRepository jobRepository;
     protected final RedisPublisherService redisPublisherService;
+    protected final ObjectMapper objectMapper;
 
     protected abstract String getRedisChannelPublishName();
     protected abstract String getRunpodUrl();
@@ -46,17 +49,17 @@ abstract class AbstractJob <T> {
                 .workerJobId(jobResponse.getId())
                 .status(jobResponse.getStatus())
                 .jobType(getJobType().getType())
-                .jobRequest(jobRequest)
+                .jobRequest(objectMapper.convertValue(jobRequest, Map.class))
                 .build();
         jobRepository.save(job);
     }
 
-    public void callback(JobWebhookResponseDto jobWebhookResponseDto) {
+    public void callback(JobWebhookRequestDto jobWebhookResponseDto) {
         log.info("Received callback for upscaling jobId={}", jobWebhookResponseDto.getJobId());
         Job job = jobRepository.findByWorkerJobId(jobWebhookResponseDto.getJobId())
                 .orElseThrow(() -> new RuntimeException("Job not found for workerJobId: " + jobWebhookResponseDto.getJobId()));
         job.setStatus(Optional.ofNullable(jobWebhookResponseDto.getStatus()).map(String::toUpperCase).orElse(job.getStatus()));
-        job.setJobWebhookResponse(jobWebhookResponseDto);
+        job.setJobWebhookResponse(objectMapper.convertValue(jobWebhookResponseDto, Map.class));
         job.setStatus(jobWebhookResponseDto.getStatus().toUpperCase());
         jobRepository.save(job);
         redisPublisherService.publish(getRedisChannelPublishName(), ConsumerRequest
