@@ -2,6 +2,7 @@ package id.rockierocker.runpodworker.entity;
 
 import id.rockierocker.runpodworker.dto.JobRequest;
 import id.rockierocker.runpodworker.dto.JobResponse;
+import id.rockierocker.runpodworker.dto.JobWebhookResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -44,6 +45,10 @@ public class Job extends BaseEntity{
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "job_response", columnDefinition = "jsonb")
     private JobResponse<?> jobResponse;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "job_webhook_response", columnDefinition = "jsonb")
+    private JobWebhookResponseDto jobWebhookResponse;
 
     @Column(name = "execution_time")
     private Float executionTime;

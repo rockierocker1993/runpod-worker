@@ -10,9 +10,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 @Slf4j
-abstract class AbstractJob <T, R> {
+abstract class AbstractJob <T> {
 
     @Value("${runpod.api-token}")
     protected String runpodApiToken;
@@ -49,20 +51,18 @@ abstract class AbstractJob <T, R> {
         jobRepository.save(job);
     }
 
-    public void callback(JobResponse<R> jobResponse) {
-        log.info("Received callback for upscaling jobId={}", jobResponse.getId());
-        Job job = jobRepository.findByWorkerJobId(jobResponse.getId())
-                .orElseThrow(() -> new RuntimeException("Job not found for workerJobId: " + jobResponse.getId()));
-        job.setStatus(jobResponse.getStatus());
-        job.setJobResponse(jobResponse);
-        job.setWorkerId(jobResponse.getWorkerId());
-        job.setExecutionTime(jobResponse.getExecutionTime());
-        job.setDelayTime(jobResponse.getDelayTime());
+    public void callback(JobWebhookResponseDto jobWebhookResponseDto) {
+        log.info("Received callback for upscaling jobId={}", jobWebhookResponseDto.getJobId());
+        Job job = jobRepository.findByWorkerJobId(jobWebhookResponseDto.getJobId())
+                .orElseThrow(() -> new RuntimeException("Job not found for workerJobId: " + jobWebhookResponseDto.getJobId()));
+        job.setStatus(Optional.ofNullable(jobWebhookResponseDto.getStatus()).map(String::toUpperCase).orElse(job.getStatus()));
+        job.setJobWebhookResponse(jobWebhookResponseDto);
+        job.setStatus(jobWebhookResponseDto.getStatus().toUpperCase());
         jobRepository.save(job);
         redisPublisherService.publish(getRedisChannelPublishName(), ConsumerRequest
                 .builder()
                 .requestId(job.getRequestId())
-                .data(jobResponse.getOutput())
+                .data(jobWebhookResponseDto)
                 .build()
         );
 

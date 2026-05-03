@@ -17,8 +17,8 @@ public class WebhookController {
     private final UpscalerJobService upscalerJobService;
 
     @PostMapping("/upscaler")
-    public String receiveWebhook(@RequestBody JobResponse<UpscalerResponseDto> jobResponse) {
-        upscalerJobService.callback(jobResponse);
+    public String receiveWebhook(@RequestBody UpscalerResponseDto upscalerResponseDto) {
+        upscalerJobService.callback(upscalerResponseDto);
         return "Webhook received successfully";
     }
 }

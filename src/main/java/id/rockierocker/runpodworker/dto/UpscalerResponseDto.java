@@ -10,10 +10,8 @@ import java.util.List;
 @JsonNaming(tools.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class UpscalerResponseDto {
-    private String errorMessage;
+public class UpscalerResponseDto extends JobWebhookResponseDto {
     private String format;
-    private String jobId;
     private List<Integer> originalSize;
     private String outputFormat;
     private Integer outputQuality;
@@ -22,5 +20,8 @@ public class UpscalerResponseDto {
     private Double processingTime;
     private Integer scale;
     private String status;
+    private String inputStorageMode;
+    private String outputStorageMode;
+    private String outputVolume;
     private LocalDateTime webhookTriggeredAt;
 }
