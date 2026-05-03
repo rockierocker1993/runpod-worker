@@ -1,5 +1,6 @@
 package id.rockierocker.runpodworker.service;
 
+import org.springframework.scheduling.annotation.Async;
 import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.component.HttpRequest;
 import id.rockierocker.runpodworker.component.RedisPublisherService;
@@ -16,7 +17,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
-abstract class AbstractJob <T> {
+abstract class AbstractJob <T, R> {
 
     @Value("${runpod.api-token}")
     protected String runpodApiToken;
@@ -29,11 +30,11 @@ abstract class AbstractJob <T> {
     protected abstract String getRunpodUrl();
     protected abstract JobType getJobType();
 
-    public void consume(ConsumerRequest<T> upscallerRequestDtoConsumerRequest) {
-        log.info("Processing upscaling requestId={}", upscallerRequestDtoConsumerRequest.getRequestId());
+    public void consume(ConsumerRequest<T> consumerRequest) {
+        log.info("Consuming job requestId={}", consumerRequest.getRequestId());
         JobRequest<T> jobRequest = JobRequest
                 .<T>builder()
-                .input(upscallerRequestDtoConsumerRequest.getData())
+                .input(consumerRequest.getData())
                 .build();
         JobResponse<?> jobResponse = httpRequest.post(
                 HttpRequestDto.builder()
@@ -42,10 +43,10 @@ abstract class AbstractJob <T> {
                         .request(jobRequest)
                         .build(),
                 JobResponse.class,
-                new RuntimeException("Failed to create upscaling job")
+                new RuntimeException("Failed to create job")
         );
         Job job = Job.builder()
-                .requestId(upscallerRequestDtoConsumerRequest.getRequestId())
+                .requestId(consumerRequest.getRequestId())
                 .workerJobId(jobResponse.getId())
                 .status(jobResponse.getStatus())
                 .jobType(getJobType().getType())
@@ -54,21 +55,20 @@ abstract class AbstractJob <T> {
         jobRepository.save(job);
     }
 
-    public void callback(JobWebhookRequestDto jobWebhookResponseDto) {
-        log.info("Received callback for upscaling jobId={}", jobWebhookResponseDto.getJobId());
-        Job job = jobRepository.findByWorkerJobId(jobWebhookResponseDto.getJobId())
-                .orElseThrow(() -> new RuntimeException("Job not found for workerJobId: " + jobWebhookResponseDto.getJobId()));
-        job.setStatus(Optional.ofNullable(jobWebhookResponseDto.getStatus()).map(String::toUpperCase).orElse(job.getStatus()));
-        job.setJobWebhookResponse(objectMapper.convertValue(jobWebhookResponseDto, Map.class));
-        job.setStatus(jobWebhookResponseDto.getStatus().toUpperCase());
+    @Async
+    public void callback(String jobId, String status, R data) {
+        log.info("Received callback for jobId={}", jobId);
+        Job job = jobRepository.findByWorkerJobId(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found for workerJobId: " + jobId));
+        job.setStatus(Optional.ofNullable(status).map(String::toUpperCase).orElse(null));
+        job.setJobWebhookResponse(objectMapper.convertValue(data, Map.class));
         jobRepository.save(job);
         redisPublisherService.publish(getRedisChannelPublishName(), ConsumerRequest
                 .builder()
                 .requestId(job.getRequestId())
-                .data(jobWebhookResponseDto)
+                .data(data)
                 .build()
         );
-
     }
 
 

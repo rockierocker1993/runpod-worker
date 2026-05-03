@@ -1,42 +1,42 @@
 package id.rockierocker.runpodworker.service;
 
-import id.rockierocker.runpodworker.dto.UpscalerResponseDto;
-import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.component.HttpRequest;
 import id.rockierocker.runpodworker.component.RedisPublisherService;
-import id.rockierocker.runpodworker.dto.UpscalerRequestDto;
+import id.rockierocker.runpodworker.dto.RembgRequestDto;
+import id.rockierocker.runpodworker.dto.RembgResponseDto;
 import id.rockierocker.runpodworker.enums.JobType;
 import id.rockierocker.runpodworker.repository.JobRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 
 @Slf4j
 @Service
-public class UpscalerJobService extends AbstractJob<UpscalerRequestDto, UpscalerResponseDto> {
+public class RembgJobService extends AbstractJob<RembgRequestDto, RembgResponseDto> {
 
-    @Value("${runpod.worker.upscaler.url}")
-    private String runpodWorkerUpscalerUrl;
-    @Value("${redis.channel.job-upscaler-response}")
-    private String redisChannelUpscaler;
+    @Value("${runpod.worker.rembg.url}")
+    private String runpodWorkerUrl;
+    @Value("${redis.channel.job-rembg-response}")
+    private String redisChannel;
 
-    public UpscalerJobService(HttpRequest httpRequest, JobRepository jobRepository, RedisPublisherService redisPublisherService, ObjectMapper objectMapper) {
+    public RembgJobService(HttpRequest httpRequest, JobRepository jobRepository, RedisPublisherService redisPublisherService, ObjectMapper objectMapper) {
         super(httpRequest, jobRepository, redisPublisherService, objectMapper);
     }
 
     @Override
     public String getRedisChannelPublishName() {
-        return redisChannelUpscaler;
+        return redisChannel;
     }
 
     @Override
     public String getRunpodUrl() {
-        return runpodWorkerUpscalerUrl;
+        return runpodWorkerUrl;
     }
 
     @Override
     public JobType getJobType() {
-        return JobType.UPSCALER;
+        return JobType.REMBG;
     }
 }

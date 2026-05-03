@@ -1,7 +1,7 @@
 package id.rockierocker.runpodworker.enums;
 
 public enum JobType {
-    UPSCALER("upscaler"),
+    UPSCALER("UPSCALER"),
     REMBG("REMBG");
 
     private final String type;
