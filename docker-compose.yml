@@ -1,0 +1,28 @@
+services:
+  runpod-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: runpod-worker
+    # Run the container processes using the host UID/GID so files created in the bind-mounted
+    # ./output-dir are owned by the host user and accessible via SFTP/FileZilla.
+    # Load environment variables from an optional .env file at the repo root to allow
+    # overriding Spring Boot properties and runtime settings when running docker-compose.
+    env_file:
+      - .env
+    environment:
+      # Java Options
+      JAVA_OPTS: "-Xms512m -Xmx1024m"
+      # These can be set in a .env file (see .env.example) or exported before running compose
+      LOCAL_UID: "${LOCAL_UID:-1000}"
+      LOCAL_GID: "${LOCAL_GID:-1000}"
+    ports:
+      - "8003:8003"
+    restart: unless-stopped
+    # Run container processes using the host user's UID:GID so created files are readable
+    # by that same host user (useful for SFTP/FileZilla). Set LOCAL_UID/LOCAL_GID in a .env file
+    # or export them in the shell before running `docker compose`.
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    command: ["java", "-jar", "app.jar"]
+    volumes:
+      - ./data:/app/data:ro
