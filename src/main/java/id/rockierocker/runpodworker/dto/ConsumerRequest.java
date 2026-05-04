@@ -14,5 +14,6 @@ import lombok.RequiredArgsConstructor;
 @Builder
 public class ConsumerRequest<T> {
     private String requestId;
+    private Boolean callRunpodSync;
     T data;
 }

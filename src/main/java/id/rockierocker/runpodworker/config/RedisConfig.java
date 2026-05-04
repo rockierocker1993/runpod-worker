@@ -1,5 +1,6 @@
 package id.rockierocker.runpodworker.config;
 
+import id.rockierocker.runpodworker.consumer.JobRembgConsumer;
 import id.rockierocker.runpodworker.consumer.JobUpscalerConsumer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,8 @@ public class RedisConfig {
 
     @Value("${redis.channel.job-upscaler-request}")
     private String jobUpscalerChannel;
+    @Value("${redis.channel.job-rembg-request}")
+    private String jobRembgChannel;
 
     // -------------------------------------------------------------------------
     // RedisTemplate
@@ -36,28 +39,6 @@ public class RedisConfig {
         return template;
     }
 
-    // -------------------------------------------------------------------------
-    // Pub/Sub — Channels
-    // -------------------------------------------------------------------------
-
-    @Bean
-    public ChannelTopic jobUpscallerTopic() {
-        return new ChannelTopic(jobUpscalerChannel);
-    }
-
-    // -------------------------------------------------------------------------
-    // Pub/Sub — Listener Adapter & Container
-    // -------------------------------------------------------------------------
-
-    /**
-     * Adapter yang mengarahkan pesan dari Redis ke method {@code onMessage}
-     * di {@link JobUpscalerConsumer}.
-     */
-    @Bean
-    public MessageListenerAdapter jobUpscalerListenerAdapter(JobUpscalerConsumer consumer) {
-        return new MessageListenerAdapter(consumer, "onMessage");
-    }
-
     /**
      * Container yang mendaftarkan semua listener ke channel masing-masing.
      * Tambahkan listener baru di sini jika ada consumer baru.
@@ -65,13 +46,15 @@ public class RedisConfig {
     @Bean
     public RedisMessageListenerContainer redisMessageListenerContainer(
             RedisConnectionFactory connectionFactory,
-            MessageListenerAdapter jobUpscalerListenerAdapter
+            JobUpscalerConsumer jobUpscalerConsumer,
+            JobRembgConsumer jobRembgConsumer
     ) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
 
         // Daftarkan consumer
-        container.addMessageListener(jobUpscalerListenerAdapter, jobUpscallerTopic());
+        container.addMessageListener(new MessageListenerAdapter(jobUpscalerConsumer, "onMessage"), new ChannelTopic(jobUpscalerChannel));
+        container.addMessageListener(new MessageListenerAdapter(jobRembgConsumer, "onMessage"), new ChannelTopic(jobRembgChannel));
 
         return container;
     }

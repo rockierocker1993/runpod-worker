@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
-abstract class AbstractJob <T, R> {
+abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
 
     @Value("${runpod.api-token}")
     protected String runpodApiToken;
@@ -30,6 +30,7 @@ abstract class AbstractJob <T, R> {
     protected abstract String getRunpodUrl();
     protected abstract JobType getJobType();
 
+    @Override
     public void consume(ConsumerRequest<T> consumerRequest) {
         log.info("Consuming job requestId={}", consumerRequest.getRequestId());
         JobRequest<T> jobRequest = JobRequest
