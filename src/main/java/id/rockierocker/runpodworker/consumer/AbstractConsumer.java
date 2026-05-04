@@ -2,6 +2,7 @@ package id.rockierocker.runpodworker.consumer;
 
 
 import id.rockierocker.runpodworker.dto.ConsumerRequest;
+import org.springframework.data.redis.core.RedisTemplate;
 import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.service.AbstractJobInterface;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import tools.jackson.core.type.TypeReference;
 @RequiredArgsConstructor
 abstract class AbstractConsumer<T> implements MessageListener {
 
+    private final RedisTemplate<String, String> redisTemplate;
     protected final AbstractJobInterface<T, ?> jobInterface;
     protected ObjectMapper objectMapper;
 
@@ -26,12 +28,17 @@ abstract class AbstractConsumer<T> implements MessageListener {
     @Override
     public void onMessage(Message message, byte[] pattern) {
         String channel = new String(message.getChannel());
-        String body = new String(message.getBody());
-
-        log.info("Received Redis message | channel={} | body={}", channel, body);
+        String key = new String(message.getBody());
+        String data = redisTemplate.opsForValue().get(key);
+        log.info("Received Redis message on channel={} with key={}", channel, key);
+        if (data == null) {
+            // sudah expired
+            log.warn("Message expired for key={}", key);
+            return;
+        }
 
         try {
-            ConsumerRequest<T> jobMessage = objectMapper.readValue(body, new TypeReference<ConsumerRequest<T>>() {
+            ConsumerRequest<T> jobMessage = objectMapper.readValue(data, new TypeReference<ConsumerRequest<T>>() {
             });
             jobInterface.consume(jobMessage);
             log.info("Job [{}] processed successfully", jobMessage.getRequestId());
