@@ -3,7 +3,6 @@ package id.rockierocker.runpodworker.consumer;
 import id.rockierocker.runpodworker.dto.RembgRequestDto;
 import id.rockierocker.runpodworker.service.RembgJobService;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * Redis Pub/Sub subscriber untuk channel "job-rembg".

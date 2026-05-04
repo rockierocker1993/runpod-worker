@@ -15,9 +15,9 @@ import tools.jackson.core.type.TypeReference;
 @RequiredArgsConstructor
 abstract class AbstractConsumer<T> implements MessageListener {
 
-    private final RedisTemplate<String, String> redisTemplate;
     protected final AbstractJobInterface<T, ?> jobInterface;
     protected ObjectMapper objectMapper;
+    protected RedisTemplate<String, String> redisTemplate;
 
     /**
      * Dipanggil otomatis setiap ada pesan masuk ke channel yang didaftarkan.
