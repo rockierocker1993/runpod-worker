@@ -2,6 +2,7 @@ package id.rockierocker.runpodworker.consumer;
 
 
 import id.rockierocker.runpodworker.dto.ConsumerRequest;
+import id.rockierocker.runpodworker.service.RembgJobService;
 import org.springframework.data.redis.core.RedisTemplate;
 import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.service.AbstractJobInterface;
@@ -16,8 +17,8 @@ import tools.jackson.core.type.TypeReference;
 abstract class AbstractConsumer<T> implements MessageListener {
 
     protected final AbstractJobInterface<T, ?> jobInterface;
-    protected ObjectMapper objectMapper;
-    protected RedisTemplate<String, String> redisTemplate;
+    protected final ObjectMapper objectMapper;
+    protected final RedisTemplate<String, String> redisTemplate;
 
     /**
      * Dipanggil otomatis setiap ada pesan masuk ke channel yang didaftarkan.
