@@ -68,12 +68,12 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
         jobRepository.save(job);
 
         if(isSync)
-            redisPublisherService.publish(getRedisChannelPublishName(), ConsumerRequest
-                    .builder()
-                    .requestId(job.getRequestId())
-                    .data(jobResponse.getOutput())
-                    .build()
-            );
+            redisPublisherService.publish(getRedisChannelPublishName(), consumerRequest.getRequestId(), ConsumerRequest
+                            .builder()
+                            .requestId(job.getRequestId())
+                            .data(jobResponse)
+                            .build()
+                    , 20L);
 
     }
 
