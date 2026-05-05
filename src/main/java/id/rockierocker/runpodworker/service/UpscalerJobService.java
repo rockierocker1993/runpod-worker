@@ -1,9 +1,9 @@
 package id.rockierocker.runpodworker.service;
 
+import id.rockierocker.runpodworker.component.RedisPublisher;
 import id.rockierocker.runpodworker.dto.UpscalerResponseDto;
 import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.component.HttpRequest;
-import id.rockierocker.runpodworker.component.RedisPublisherService;
 import id.rockierocker.runpodworker.dto.UpscalerRequestDto;
 import id.rockierocker.runpodworker.enums.JobType;
 import id.rockierocker.runpodworker.repository.JobRepository;
@@ -21,7 +21,7 @@ public class UpscalerJobService extends AbstractJob<UpscalerRequestDto, Upscaler
     @Value("${redis.channel.job-upscaler-response}")
     private String redisChannelUpscaler;
 
-    public UpscalerJobService(HttpRequest httpRequest, JobRepository jobRepository, RedisPublisherService redisPublisherService, ObjectMapper objectMapper) {
+    public UpscalerJobService(HttpRequest httpRequest, JobRepository jobRepository, RedisPublisher redisPublisherService, ObjectMapper objectMapper) {
         super(httpRequest, jobRepository, redisPublisherService, objectMapper);
     }
 

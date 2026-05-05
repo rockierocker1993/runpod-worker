@@ -1,12 +1,13 @@
 package id.rockierocker.runpodworker.component;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+
+import java.time.Duration;
 
 /**
  * Service untuk mempublish pesan ke Redis Pub/Sub channel.
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RedisPublisherService {
+public class RedisPublisher {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
@@ -28,6 +29,11 @@ public class RedisPublisherService {
     public void publish(String channel, Object payload) {
         String json = toJson(payload);
         publish(channel, json);
+    }
+
+    public void publish(String channel, String key, Object payload, Long ttlSeconds) {
+        String json = toJson(payload);
+        publish(channel, key, json, ttlSeconds);
     }
 
     /**
@@ -45,6 +51,18 @@ public class RedisPublisherService {
             throw new RuntimeException("Failed to publish message to Redis channel: " + channel, e);
         }
     }
+
+    public void publish(String channel, String key, String message, Long ttlSeconds) {
+        try {
+            redisTemplate.opsForValue().set(key, message, Duration.ofSeconds(ttlSeconds));
+            redisTemplate.convertAndSend(channel, key);
+            log.info("Published message to Redis channel={}", channel);
+        } catch (Exception e) {
+            log.error("Failed to publish message to Redis channel={} : {}", channel, e.getMessage(), e);
+            throw new RuntimeException("Failed to publish message to Redis channel: " + channel, e);
+        }
+    }
+
 
     // -------------------------------------------------------------------------
     // Helper

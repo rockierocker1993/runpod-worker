@@ -1,9 +1,9 @@
 package id.rockierocker.runpodworker.service;
 
+import id.rockierocker.runpodworker.component.RedisPublisher;
 import org.springframework.scheduling.annotation.Async;
 import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.component.HttpRequest;
-import id.rockierocker.runpodworker.component.RedisPublisherService;
 import id.rockierocker.runpodworker.dto.*;
 import id.rockierocker.runpodworker.entity.Job;
 import id.rockierocker.runpodworker.enums.JobType;
@@ -29,7 +29,7 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
     protected String runpodPathSync;
     protected final HttpRequest httpRequest;
     protected final JobRepository jobRepository;
-    protected final RedisPublisherService redisPublisherService;
+    protected final RedisPublisher redisPublisherService;
     protected final ObjectMapper objectMapper;
 
     protected abstract String getRedisChannelPublishName();
@@ -87,12 +87,12 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
         if(!isSync) job.setStatus(Optional.ofNullable(status).map(String::toUpperCase).orElse(null));
         jobRepository.save(job);
         if(!isSync)
-            redisPublisherService.publish(getRedisChannelPublishName(), ConsumerRequest
+            redisPublisherService.publish(getRedisChannelPublishName(), jobId, ConsumerRequest
                     .builder()
                     .requestId(job.getRequestId())
                     .data(data)
                     .build()
-            );
+            , 20L);
     }
 
 

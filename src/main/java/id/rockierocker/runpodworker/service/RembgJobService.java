@@ -1,7 +1,7 @@
 package id.rockierocker.runpodworker.service;
 
 import id.rockierocker.runpodworker.component.HttpRequest;
-import id.rockierocker.runpodworker.component.RedisPublisherService;
+import id.rockierocker.runpodworker.component.RedisPublisher;
 import id.rockierocker.runpodworker.dto.RembgRequestDto;
 import id.rockierocker.runpodworker.dto.RembgResponseDto;
 import id.rockierocker.runpodworker.enums.JobType;
@@ -21,7 +21,7 @@ public class RembgJobService extends AbstractJob<RembgRequestDto, RembgResponseD
     @Value("${redis.channel.job-rembg-response}")
     private String redisChannel;
 
-    public RembgJobService(HttpRequest httpRequest, JobRepository jobRepository, RedisPublisherService redisPublisherService, ObjectMapper objectMapper) {
+    public RembgJobService(HttpRequest httpRequest, JobRepository jobRepository, RedisPublisher redisPublisherService, ObjectMapper objectMapper) {
         super(httpRequest, jobRepository, redisPublisherService, objectMapper);
     }
 
