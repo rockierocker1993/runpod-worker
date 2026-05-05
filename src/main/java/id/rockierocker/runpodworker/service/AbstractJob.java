@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -21,6 +22,10 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
 
     @Value("${runpod.api-token}")
     protected String runpodApiToken;
+    @Value("${runpod.run.path.async}")
+    protected String runpodPathAsync;
+    @Value("${runpod.run.path.sync}")
+    protected String runpodPathSync;
     protected final HttpRequest httpRequest;
     protected final JobRepository jobRepository;
     protected final RedisPublisherService redisPublisherService;
@@ -37,9 +42,10 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
                 .<T>builder()
                 .input(consumerRequest.getData())
                 .build();
+        boolean isSync = Objects.equals(consumerRequest.getCallRunpodSync(), Boolean.TRUE);
         JobResponse<?> jobResponse = httpRequest.post(
                 HttpRequestDto.builder()
-                        .url(getRunpodUrl())
+                        .url(getRunpodUrl().concat(isSync ? runpodPathSync : runpodPathAsync))
                         .bearerToken(runpodApiToken)
                         .request(jobRequest)
                         .build(),
@@ -51,6 +57,7 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
                 .workerJobId(jobResponse.getId())
                 .status(jobResponse.getStatus())
                 .jobType(getJobType().getType())
+                .jobResponse(objectMapper.convertValue(jobResponse, Map.class))
                 .jobRequest(objectMapper.convertValue(jobRequest, Map.class))
                 .build();
         jobRepository.save(job);
