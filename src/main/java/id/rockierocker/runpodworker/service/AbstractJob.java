@@ -71,7 +71,7 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
             redisPublisherService.publish(getRedisChannelPublishName(), consumerRequest.getRequestId(), ConsumerRequest
                             .builder()
                             .requestId(job.getRequestId())
-                            .data(jobResponse)
+                            .data(jobResponse.getOutput())
                             .build()
                     , 20L);
 
