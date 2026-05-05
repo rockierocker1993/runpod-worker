@@ -23,14 +23,14 @@ public class WebhookController {
     @PostMapping("/upscaler")
     public String upscalerReceiveWebhook(@RequestBody UpscalerResponseDto upscalerResponseDto) {
         log.info("Received Upscaler webhook: jobId={}, status={}", upscalerResponseDto.getJobId(), upscalerResponseDto.getStatus());
-        //upscalerJobService.callback(upscalerResponseDto.getJobId(), upscalerResponseDto.getStatus(), upscalerResponseDto);
+        upscalerJobService.callback(upscalerResponseDto.getJobId(), upscalerResponseDto.getStatus(), upscalerResponseDto);
         return "Webhook received successfully";
     }
 
     @PostMapping("/rembg")
     public String rembgReceiveWebhook(@RequestBody RembgResponseDto rembgResponseDto) {
         log.info("Received Rembg webhook: jobId={}, status={}", rembgResponseDto.getJobId(), rembgResponseDto.getStatus());
-        //rembgJobService.callback(rembgResponseDto.getJobId(), rembgResponseDto.getStatus(), rembgResponseDto);
+        rembgJobService.callback(rembgResponseDto.getJobId(), rembgResponseDto.getStatus(), rembgResponseDto);
         return "Webhook received successfully";
     }
 }

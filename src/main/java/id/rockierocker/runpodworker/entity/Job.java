@@ -6,6 +6,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Entity
@@ -54,6 +55,12 @@ public class Job extends BaseEntity {
 
     @Column(name = "delay_time")
     private Float delayTime;
+
+    @Column(name = "is_sync")
+    private Boolean isSync;
+
+    @Column(name = "sync_response_time")
+    private LocalDateTime syncResponseTime;
 
 
 }
