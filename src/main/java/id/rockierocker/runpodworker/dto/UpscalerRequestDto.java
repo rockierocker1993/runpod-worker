@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Builder
 public class UpscalerRequestDto {
+    private Boolean webhookEnabled = false;
     private String image;
     private Integer scale = 2;
     private String outputFormat = "png";

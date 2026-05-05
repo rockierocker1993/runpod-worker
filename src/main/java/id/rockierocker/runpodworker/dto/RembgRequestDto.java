@@ -13,6 +13,7 @@ import tools.jackson.databind.annotation.JsonNaming;
 @RequiredArgsConstructor
 @Builder
 public class RembgRequestDto {
+    private Boolean webhookEnabled = false;
     private String image;
     private String model = "birefnet-general";
     private String outputFormat = "png";
