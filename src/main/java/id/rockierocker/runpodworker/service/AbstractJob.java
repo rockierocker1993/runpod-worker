@@ -1,6 +1,7 @@
 package id.rockierocker.runpodworker.service;
 
 import id.rockierocker.runpodworker.component.RedisPublisher;
+import id.rockierocker.runpodworker.enums.JobStatus;
 import org.springframework.scheduling.annotation.Async;
 import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.component.HttpRequest;
@@ -13,13 +14,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
-abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
+abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
 
     @Value("${runpod.api-token}")
     protected String runpodApiToken;
@@ -33,7 +35,9 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
     protected final ObjectMapper objectMapper;
 
     protected abstract String getRedisChannelPublishName();
+
     protected abstract String getRunpodUrl();
+
     protected abstract JobType getJobType();
 
     @Override
@@ -44,6 +48,12 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
                 .input(consumerRequest.getData())
                 .build();
         boolean isSync = Objects.equals(consumerRequest.getCallRunpodSync(), Boolean.TRUE);
+        Job job = jobRepository.save(Job.builder()
+                .requestId(consumerRequest.getRequestId())
+                .jobRequest(objectMapper.convertValue(jobRequest, Map.class))
+                        .isSync(isSync)
+                .build());
+
         JobResponse<?> jobResponse = httpRequest.post(
                 HttpRequestDto.builder()
                         .url(getRunpodUrl().concat(isSync ? runpodPathSync : runpodPathAsync))
@@ -53,21 +63,16 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
                 JobResponse.class,
                 new RuntimeException("Failed to create job")
         );
-        Job job = Job.builder()
-                .requestId(consumerRequest.getRequestId())
-                .isSync(isSync)
-                .executionTime(jobResponse.getExecutionTime())
-                .delayTime(jobResponse.getDelayTime())
-                .workerJobId(jobResponse.getId())
-                .status(jobResponse.getStatus())
-                .jobType(getJobType().getType())
-                .jobResponse(objectMapper.convertValue(jobResponse, Map.class))
-                .jobRequest(objectMapper.convertValue(jobRequest, Map.class))
-                .build();
-        if(isSync) job.setSyncResponseTime(LocalDateTime.now());
+        job.setExecutionTime(jobResponse.getExecutionTime());
+        job.setDelayTime(jobResponse.getDelayTime());
+        job.setWorkerJobId(jobResponse.getId());
+        job.setStatus(jobResponse.getStatus());
+        job.setJobType(getJobType().getType());
+        job.setJobResponse(objectMapper.convertValue(jobResponse, Map.class));
+        if (isSync) job.setSyncResponseTime(LocalDateTime.now());
         jobRepository.save(job);
 
-        if(isSync)
+        if (isSync && !JobStatus.IN_QUEUE.name().equalsIgnoreCase(jobResponse.getStatus()))
             redisPublisherService.publish(getRedisChannelPublishName(), consumerRequest.getRequestId(), ConsumerRequest
                             .builder()
                             .requestId(job.getRequestId())
@@ -82,17 +87,18 @@ abstract class AbstractJob <T, R> implements AbstractJobInterface <T, R> {
         log.info("Received callback for jobId={}", jobId);
         Job job = jobRepository.findByWorkerJobId(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found for workerJobId: " + jobId));
+        String previousStatus = job.getStatus();
         boolean isSync = Objects.equals(job.getIsSync(), Boolean.TRUE);
         job.setJobWebhookResponse(objectMapper.convertValue(data, Map.class));
-        if(!isSync) job.setStatus(Optional.ofNullable(status).map(String::toUpperCase).orElse(null));
+        if (JobStatus.IN_QUEUE.name().equalsIgnoreCase(previousStatus)) job.setStatus(Optional.ofNullable(status).map(String::toUpperCase).orElse(null));
         jobRepository.save(job);
-        if(!isSync)
+        if ((JobStatus.IN_QUEUE.name().equalsIgnoreCase(previousStatus) || !isSync))
             redisPublisherService.publish(getRedisChannelPublishName(), jobId, ConsumerRequest
-                    .builder()
-                    .requestId(job.getRequestId())
-                    .data(data)
-                    .build()
-            , 20L);
+                            .builder()
+                            .requestId(job.getRequestId())
+                            .data(data)
+                            .build()
+                    , 20L);
     }
 
 
