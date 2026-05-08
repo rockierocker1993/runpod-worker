@@ -16,8 +16,8 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class RembgJobService extends AbstractJob<RembgRequestDto, RembgResponseDto> {
 
-    @Value("${runpod.worker.rembg.url}")
-    private String runpodWorkerUrl;
+    @Value("${runpod.serverless.rembg.url}")
+    private String url;
     @Value("${redis.channel.job-rembg-response}")
     private String redisChannel;
 
@@ -32,7 +32,7 @@ public class RembgJobService extends AbstractJob<RembgRequestDto, RembgResponseD
 
     @Override
     public String getRunpodUrl() {
-        return runpodWorkerUrl;
+        return url;
     }
 
     @Override

@@ -50,6 +50,7 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
         boolean isSync = Objects.equals(consumerRequest.getCallRunpodSync(), Boolean.TRUE);
         Job job = jobRepository.save(Job.builder()
                 .requestId(consumerRequest.getRequestId())
+                .jobType(getJobType().getType())
                 .jobRequest(objectMapper.convertValue(jobRequest, Map.class))
                         .isSync(isSync)
                 .build());
@@ -67,7 +68,6 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
         job.setDelayTime(jobResponse.getDelayTime());
         job.setWorkerJobId(jobResponse.getId());
         job.setStatus(jobResponse.getStatus());
-        job.setJobType(getJobType().getType());
         job.setJobResponse(objectMapper.convertValue(jobResponse, Map.class));
         if (isSync) job.setSyncResponseTime(LocalDateTime.now());
         jobRepository.save(job);

@@ -2,7 +2,6 @@ package id.rockierocker.runpodworker.consumer;
 
 
 import id.rockierocker.runpodworker.dto.ConsumerRequest;
-import id.rockierocker.runpodworker.service.RembgJobService;
 import org.springframework.data.redis.core.RedisTemplate;
 import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.service.AbstractJobInterface;

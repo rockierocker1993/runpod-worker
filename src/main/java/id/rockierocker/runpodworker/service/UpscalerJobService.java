@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class UpscalerJobService extends AbstractJob<UpscalerRequestDto, UpscalerResponseDto> {
 
-    @Value("${runpod.worker.upscaler.url}")
-    private String runpodWorkerUpscalerUrl;
+    @Value("${runpod.serverless.upscaler.url}")
+    private String url;
     @Value("${redis.channel.job-upscaler-response}")
     private String redisChannelUpscaler;
 
@@ -32,7 +32,7 @@ public class UpscalerJobService extends AbstractJob<UpscalerRequestDto, Upscaler
 
     @Override
     public String getRunpodUrl() {
-        return runpodWorkerUpscalerUrl;
+        return url;
     }
 
     @Override
