@@ -67,6 +67,7 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
         if("warming-up".equalsIgnoreCase(consumerRequest.getRequestId())) {
             job.setWorkerId(jobResponse.getWorkerId());
             job.setStatus(jobResponse.getStatus());
+            job.setWorkerJobId(jobResponse.getId());
             jobRepository.save(job);
             return;
         }
