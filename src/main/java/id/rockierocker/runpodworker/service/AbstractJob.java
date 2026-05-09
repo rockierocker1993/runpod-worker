@@ -65,11 +65,12 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
 
         // Skip updating job and publishing to Redis for warming-up requests
         if("warming-up".equalsIgnoreCase(consumerRequest.getRequestId())) {
+            job.setWorkerId(jobResponse.getWorkerId());
             job.setStatus(jobResponse.getStatus());
             jobRepository.save(job);
             return;
         }
-
+        job.setWorkerId(jobResponse.getWorkerId());
         job.setExecutionTime(jobResponse.getExecutionTime());
         job.setDelayTime(jobResponse.getDelayTime());
         job.setWorkerJobId(jobResponse.getId());
