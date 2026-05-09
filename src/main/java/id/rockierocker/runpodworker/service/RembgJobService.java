@@ -4,7 +4,6 @@ import id.rockierocker.runpodworker.component.HttpRequest;
 import id.rockierocker.runpodworker.component.RedisPublisher;
 import id.rockierocker.runpodworker.dto.RembgRequestDto;
 import id.rockierocker.runpodworker.dto.RembgResponseDto;
-import id.rockierocker.runpodworker.enums.JobType;
 import id.rockierocker.runpodworker.repository.JobRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +19,8 @@ public class RembgJobService extends AbstractJob<RembgRequestDto, RembgResponseD
     private String url;
     @Value("${redis.channel.job-rembg-response}")
     private String redisChannel;
+    @Value("${runpod.serverless[0].name}")
+    private String jobType;
 
     public RembgJobService(HttpRequest httpRequest, JobRepository jobRepository, RedisPublisher redisPublisherService, ObjectMapper objectMapper) {
         super(httpRequest, jobRepository, redisPublisherService, objectMapper);
@@ -36,7 +37,7 @@ public class RembgJobService extends AbstractJob<RembgRequestDto, RembgResponseD
     }
 
     @Override
-    public JobType getJobType() {
-        return JobType.REMBG;
+    public String getJobType() {
+        return jobType;
     }
 }

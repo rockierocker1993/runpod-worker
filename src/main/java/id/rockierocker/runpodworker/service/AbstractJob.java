@@ -7,14 +7,12 @@ import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.component.HttpRequest;
 import id.rockierocker.runpodworker.dto.*;
 import id.rockierocker.runpodworker.entity.Job;
-import id.rockierocker.runpodworker.enums.JobType;
 import id.rockierocker.runpodworker.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,7 +36,7 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
 
     protected abstract String getRunpodUrl();
 
-    protected abstract JobType getJobType();
+    protected abstract String getJobType();
 
     @Override
     public void consume(ConsumerRequest<T> consumerRequest) {
@@ -50,9 +48,9 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
         boolean isSync = Objects.equals(consumerRequest.getCallRunpodSync(), Boolean.TRUE);
         Job job = jobRepository.save(Job.builder()
                 .requestId(consumerRequest.getRequestId())
-                .jobType(getJobType().getType())
+                .jobType(getJobType())
                 .jobRequest(objectMapper.convertValue(jobRequest, Map.class))
-                        .isSync(isSync)
+                .isSync(isSync)
                 .build());
 
         JobResponse<?> jobResponse = httpRequest.post(
@@ -64,6 +62,10 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
                 JobResponse.class,
                 new RuntimeException("Failed to create job")
         );
+
+        // Skip updating job and publishing to Redis for warming-up requests
+        if("warming-up".equalsIgnoreCase(consumerRequest.getRequestId())) return;
+
         job.setExecutionTime(jobResponse.getExecutionTime());
         job.setDelayTime(jobResponse.getDelayTime());
         job.setWorkerJobId(jobResponse.getId());
@@ -90,7 +92,8 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
         String previousStatus = job.getStatus();
         boolean isSync = Objects.equals(job.getIsSync(), Boolean.TRUE);
         job.setJobWebhookResponse(objectMapper.convertValue(data, Map.class));
-        if (JobStatus.IN_QUEUE.name().equalsIgnoreCase(previousStatus)) job.setStatus(Optional.ofNullable(status).map(String::toUpperCase).orElse(null));
+        if (JobStatus.IN_QUEUE.name().equalsIgnoreCase(previousStatus))
+            job.setStatus(Optional.ofNullable(status).map(String::toUpperCase).orElse(null));
         jobRepository.save(job);
         if ((JobStatus.IN_QUEUE.name().equalsIgnoreCase(previousStatus) || !isSync))
             redisPublisherService.publish(getRedisChannelPublishName(), jobId, ConsumerRequest

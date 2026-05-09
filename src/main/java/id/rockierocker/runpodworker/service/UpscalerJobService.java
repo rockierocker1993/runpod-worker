@@ -5,7 +5,6 @@ import id.rockierocker.runpodworker.dto.UpscalerResponseDto;
 import tools.jackson.databind.ObjectMapper;
 import id.rockierocker.runpodworker.component.HttpRequest;
 import id.rockierocker.runpodworker.dto.UpscalerRequestDto;
-import id.rockierocker.runpodworker.enums.JobType;
 import id.rockierocker.runpodworker.repository.JobRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +19,8 @@ public class UpscalerJobService extends AbstractJob<UpscalerRequestDto, Upscaler
     private String url;
     @Value("${redis.channel.job-upscaler-response}")
     private String redisChannelUpscaler;
+    @Value("${runpod.serverless[1].name}")
+    private String jobType;
 
     public UpscalerJobService(HttpRequest httpRequest, JobRepository jobRepository, RedisPublisher redisPublisherService, ObjectMapper objectMapper) {
         super(httpRequest, jobRepository, redisPublisherService, objectMapper);
@@ -36,7 +37,7 @@ public class UpscalerJobService extends AbstractJob<UpscalerRequestDto, Upscaler
     }
 
     @Override
-    public JobType getJobType() {
-        return JobType.UPSCALER;
+    public String getJobType() {
+        return jobType;
     }
 }

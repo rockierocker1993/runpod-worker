@@ -55,9 +55,9 @@ public class RunpodEndpointScheduler {
             int RUNNING = countWorkers(endpoint, "RUNNING");
             int EXITED = countWorkers(endpoint, "EXITED");
             int TERMINATED = countWorkers(endpoint, "TERMINATED");
-            redisTemplate.opsForValue().set(String.format("RUNPOD:%s:RUNNING",name.toUpperCase()), String.valueOf(RUNNING));
-            redisTemplate.opsForValue().set(String.format("RUNPOD:%s:EXITED",name.toUpperCase()).toUpperCase(), String.valueOf(EXITED));
-            redisTemplate.opsForValue().set(String.format("RUNPOD:%s:TERMINATED",name.toUpperCase()).toUpperCase(), String.valueOf(TERMINATED));
+            redisTemplate.opsForValue().set(String.format("%s:RUNNING",name.toUpperCase()), String.valueOf(RUNNING));
+            redisTemplate.opsForValue().set(String.format("%s:EXITED",name.toUpperCase()).toUpperCase(), String.valueOf(EXITED));
+            redisTemplate.opsForValue().set(String.format("%s:TERMINATED",name.toUpperCase()).toUpperCase(), String.valueOf(TERMINATED));
             log.info("[RunpodEndpointScheduler] Updated status for serverless ({}) {} : RUNNING={}, EXITED={}, TERMINATED={}", id, name, RUNNING, EXITED, TERMINATED);
 
         } catch (Exception e) {
