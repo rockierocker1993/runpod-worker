@@ -38,6 +38,10 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
 
     protected abstract String getJobType();
 
+    /**
+     * Dipanggil oleh consumer saat menerima job request dari Redis.
+     * Membuat job di database, memanggil API Runpod untuk menjalankan job, lalu update status dan publish hasil ke Redis jika job sudah selesai.
+     */
     @Override
     public void consume(ConsumerRequest<T> consumerRequest) {
         log.info("Consuming job requestId={}", consumerRequest.getRequestId());
@@ -80,7 +84,7 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
         if (isSync) job.setSyncResponseTime(LocalDateTime.now());
         jobRepository.save(job);
 
-        if (isSync && !JobStatus.IN_QUEUE.name().equalsIgnoreCase(jobResponse.getStatus()))
+        if (JobStatus.COMPLETED.name().equalsIgnoreCase(jobResponse.getStatus()))
             redisPublisherService.publish(getRedisChannelPublishName(), consumerRequest.getRequestId(), ConsumerRequest
                             .builder()
                             .requestId(job.getRequestId())
@@ -90,18 +94,22 @@ abstract class AbstractJob<T, R> implements AbstractJobInterface<T, R> {
 
     }
 
+    /**
+     * Dipanggil oleh controller saat menerima callback dari Runpod.
+     * Update status job di database dan publish hasilnya ke Redis jika status berubah menjadi COMPLETED dan sebelumnya not COMPLETED.
+     */
     @Async
     public void callback(String jobId, String status, R data) {
         log.info("Received callback for jobId={}", jobId);
         Job job = jobRepository.findByWorkerJobId(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found for workerJobId: " + jobId));
         String previousStatus = job.getStatus();
-        boolean isSync = Objects.equals(job.getIsSync(), Boolean.TRUE);
         job.setJobWebhookResponse(objectMapper.convertValue(data, Map.class));
-        if (JobStatus.IN_QUEUE.name().equalsIgnoreCase(previousStatus))
+        job.setWebhookResponseTime(LocalDateTime.now());
+        if (!JobStatus.COMPLETED.name().equalsIgnoreCase(previousStatus))
             job.setStatus(Optional.ofNullable(status).map(String::toUpperCase).orElse(null));
         jobRepository.save(job);
-        if ((JobStatus.IN_QUEUE.name().equalsIgnoreCase(previousStatus) || !isSync))
+        if (!JobStatus.COMPLETED.name().equalsIgnoreCase(previousStatus))
             redisPublisherService.publish(getRedisChannelPublishName(), jobId, ConsumerRequest
                             .builder()
                             .requestId(job.getRequestId())

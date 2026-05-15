@@ -62,5 +62,8 @@ public class Job extends BaseEntity {
     @Column(name = "sync_response_time")
     private LocalDateTime syncResponseTime;
 
+    @Column(name = "webhook_response_time")
+    private LocalDateTime webhookResponseTime;
+
 
 }
